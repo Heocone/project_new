@@ -17,7 +17,7 @@
     <body>
         <?php
 
-use Gloudemans\Shoppingcart\Facades\Cart;
+use App\Models\Transaction;
 
         date_default_timezone_set('Asia/Ho_Chi_Minh');
   
@@ -98,44 +98,47 @@ use Gloudemans\Shoppingcart\Facades\Cart;
                         if ($secureHash == $vnp_SecureHash) {
                             if ($_GET['vnp_ResponseCode'] == '00') {
                                 echo "<span style='color:blue'>GD Thanh cong</span>";
-                                $order = new App\Models\Order();
-                                $order->user_id = Illuminate\Support\Facades\Session::get('checkoutvnpay')['user_id'];
-                                $order->subtotal = Illuminate\Support\Facades\Session::get('checkout')['subtotal'];
-                                $order->discount = Illuminate\Support\Facades\Session::get('checkout')['discount'];
-                                $order->tax = Illuminate\Support\Facades\Session::get('checkout')['tax'];
-                                $order->total = Illuminate\Support\Facades\Session::get('checkout')['total'];
-                                $order->firtsname = Illuminate\Support\Facades\Session::get('checkoutvnpay')['firtsname'];
-                                $order->lastname = Illuminate\Support\Facades\Session::get('checkoutvnpay')['lastname'];
-                                $order->email = Illuminate\Support\Facades\Session::get('checkoutvnpay')['email'];
-                                $order->mobile = Illuminate\Support\Facades\Session::get('checkoutvnpay')['mobile'];
-                                $order->line1 = Illuminate\Support\Facades\Session::get('checkoutvnpay')['line1'];
-                                $order->line2 = Illuminate\Support\Facades\Session::get('checkoutvnpay')['line2'];
-                                $order->city = Illuminate\Support\Facades\Session::get('checkoutvnpay')['city'];
-                                $order->province = Illuminate\Support\Facades\Session::get('checkoutvnpay')['province'];
-                                $order->country = Illuminate\Support\Facades\Session::get('checkoutvnpay')['country'];
-                                $order->zipcode = Illuminate\Support\Facades\Session::get('checkoutvnpay')['zipcode'];
-                                $order->information = Illuminate\Support\Facades\Session::get('checkoutvnpay')['comment'];
-                                $order->save();
-                                foreach(Gloudemans\Shoppingcart\Facades\Cart::instance('cart')->content() as $item) 
-                                {
-                                    $orderItem = new App\Models\OrderItem();
-                                    $orderItem->product_id = $item->id;
-                                    $orderItem->order_id = $order->id;
-                                    $orderItem->price = $item->price;
-                                    $orderItem->quantity = $item->qty;
-                                    if($item->options)
-                                    {
-                                        $orderItem->options = serialize($item->options);
-                                    }
-                                    $orderItem->save();
-                                }
-                                $transaction = new App\Models\Transaction();
-                                $transaction->user_id = Illuminate\Support\Facades\Auth::user()->id;
-                                $transaction->order_id = $order->id;
-                                $transaction->mode = 'vnpay';
-                                $transaction->status = 'thanhcong';
-                                $transaction->save();
-                                Cart::instance('cart')->destroy();
+                                // $order = new App\Models\Order();
+                                // $order->user_id = Illuminate\Support\Facades\Session::get('checkoutvnpay')['user_id'];
+                                // $order->subtotal = Illuminate\Support\Facades\Session::get('checkout')['subtotal'];
+                                // $order->discount = Illuminate\Support\Facades\Session::get('checkout')['discount'];
+                                // $order->tax = Illuminate\Support\Facades\Session::get('checkout')['tax'];
+                                // $order->total = Illuminate\Support\Facades\Session::get('checkout')['total'];
+                                // $order->firtsname = Illuminate\Support\Facades\Session::get('checkoutvnpay')['firtsname'];
+                                // $order->lastname = Illuminate\Support\Facades\Session::get('checkoutvnpay')['lastname'];
+                                // $order->email = Illuminate\Support\Facades\Session::get('checkoutvnpay')['email'];
+                                // $order->mobile = Illuminate\Support\Facades\Session::get('checkoutvnpay')['mobile'];
+                                // $order->line1 = Illuminate\Support\Facades\Session::get('checkoutvnpay')['line1'];
+                                // $order->line2 = Illuminate\Support\Facades\Session::get('checkoutvnpay')['line2'];
+                                // $order->city = Illuminate\Support\Facades\Session::get('checkoutvnpay')['city'];
+                                // $order->province = Illuminate\Support\Facades\Session::get('checkoutvnpay')['province'];
+                                // $order->country = Illuminate\Support\Facades\Session::get('checkoutvnpay')['country'];
+                                // $order->zipcode = Illuminate\Support\Facades\Session::get('checkoutvnpay')['zipcode'];
+                                // $order->information = Illuminate\Support\Facades\Session::get('checkoutvnpay')['comment'];
+                                // $order->save();
+                                // foreach(Gloudemans\Shoppingcart\Facades\Cart::instance('cart')->content() as $item) 
+                                // {
+                                //     $orderItem = new App\Models\OrderItem();
+                                //     $orderItem->product_id = $item->id;
+                                //     $orderItem->order_id = $order->id;
+                                //     $orderItem->price = $item->price;
+                                //     $orderItem->quantity = $item->qty;
+                                //     if($item->options)
+                                //     {
+                                //         $orderItem->options = serialize($item->options);
+                                //     }
+                                //     $orderItem->save();
+                                // }
+                                // $transaction = new App\Models\Transaction();
+                                // $transaction->user_id = Illuminate\Support\Facades\Auth::user()->id;
+                                // $transaction->order_id = $order->id;
+                                // $transaction->mode = 'vnpay';
+                                // $transaction->status = 'thanhcong';
+                                // $transaction->save();
+                                // Cart::instance('cart')->destroy();
+                                $prod = Transaction::where('order_id',Illuminate\Support\Facades\Session::get('checkoutvnpay')['order_id'])->first();
+                                $prod->status = 'thanhcong';
+                                $prod->update();
                             } else {
                                 echo "<span style='color:red'>GD Khong thanh cong</span>";  
                             }
@@ -150,16 +153,16 @@ use Gloudemans\Shoppingcart\Facades\Cart;
             <p>
                 &nbsp;
             </p>
-            <a type="button" href="#">Quay tro lai trang web sau 3 giay</a>
+            <a type="button" href="/">Quay tro lai trang web sau 3 giay</a>
             <footer class="footer">
                    <p>&copy; VNPAY <?php echo date('Y')?></p>
             </footer>
         </div>  
     </body>
 </html>
-<script>
+<!-- <script>
     const myTimeout = setTimeout(myGreeting, 3000);
     function myGreeting() {
         window.location.href = "/Vnpay"
     }
-</script>
+</script> -->

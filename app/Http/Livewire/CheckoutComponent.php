@@ -91,20 +91,65 @@ class CheckoutComponent extends Component
         ]);
         if ($this->payment_mod == 'vnpay')
         {
+            // session()->put('checkoutvnpay',[
+            //     'firtsname'=>$this->firtsname,
+            //     'lastname'=>$this->lastname,
+            //     'email'=>$this->email,
+            //     'mobile'=>$this->mobile,
+            //     'line1'=>$this->line1,
+            //     'line2'=>$this->line2,
+            //     'city'=>$this->city,
+            //     'province'=>$this->province,
+            //     'country'=>$this->country,
+            //     'zipcode'=>$this->zipcode,
+            //     'comment'=>$this->information,
+            //     'user_id'=>Auth::user()->id,
+            // ]);
+            $order = new Order();
+            $order->user_id = Auth::user()->id;
+            $order->subtotal = session()->get('checkout')['subtotal'];
+            $order->discount = session()->get('checkout')['discount'];
+            $order->tax = session()->get('checkout')['tax'];
+            $order->total = session()->get('checkout')['total'];
+            $order->firtsname = $this->firtsname;
+            $order->lastname = $this->lastname;
+            $order->email = $this->email;
+            $order->mobile = $this->mobile;
+            $order->line1 = $this->line1;
+            $order->line2 = $this->line2;
+            $order->city = $this->city;
+            $order->province = $this->province;
+            $order->country = $this->country;
+            $order->zipcode = $this->zipcode;
+            $order->status = 'ordered';
+            $order->is_shipping_different = $this->ship_to_different ? 1:0;
+            $order->information = $this->information;
+            $order->save();
+
+            foreach(Cart::instance('cart')->content() as $item) 
+            {
+                $orderItem = new OrderItem();
+                $orderItem->product_id = $item->id;
+                $orderItem->order_id = $order->id;
+                $orderItem->price = $item->price;
+                $orderItem->quantity = $item->qty;
+                if($item->options)
+                {
+                    $orderItem->options = serialize($item->options);
+                }
+                $orderItem->save();
+                $prod = Product::where('id',$orderItem->product_id)->first();
+                $prod->countsale = $orderItem->quantity + $prod->countsale;
+                $prod->quantity = $prod->quantity - $orderItem->quantity;
+                $prod->update();
+
+            }
             session()->put('checkoutvnpay',[
-                'firtsname'=>$this->firtsname,
-                'lastname'=>$this->lastname,
-                'email'=>$this->email,
-                'mobile'=>$this->mobile,
-                'line1'=>$this->line1,
-                'line2'=>$this->line2,
-                'city'=>$this->city,
-                'province'=>$this->province,
-                'country'=>$this->country,
-                'zipcode'=>$this->zipcode,
-                'comment'=>$this->information,
-                'user_id'=>Auth::user()->id,
-            ]);
+                'order_id'=>$order->id,
+            ]
+            );
+            $this->makeTransaction($order->id,'chờ thanh toán');
+            // $this->resetCart();
             return redirect()->route('VnpayC');
         }
 
